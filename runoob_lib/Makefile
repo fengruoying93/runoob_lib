@@ -1,12 +1,24 @@
-TARGET = librunoob.so
+TARGET = librunoob.a
 
 all:$(TARGET)
 
 CC = gcc
-CXX = g++-4.8
+CXX = g++
+#CXX = g++-4.8
 STRIP = strip
 ARMCC = arm-linux-gcc
 ARMSTRIP = arm-linux-strip
+
+VPATH += ./
+
+SOURCES := $(foreach dir,$(VPATH),$(wildcard $(dir)/*))
+C_SRCS   = $(filter %.c,$(SOURCES))
+CPP_SRCS = $(filter %.cpp,$(SOURCES))
+SRCS = $(C_SRCS) $(CPP_SRCS)
+C_OBJS   = $(C_SRCS:%.c=%.o)
+CPP_OBJS = $(CPP_SRCS:%.cpp=%.o)
+OBJS = $(C_OBJS) $(CPP_OBJS)
+DEPS = $(OBJS:.o=.d)
 
 #where to install
 INSTDIR = bin
@@ -22,27 +34,19 @@ LDFLAGS = -L./
 
 RANLIB = ranlib
 
-SOURCES = runoob_main.cpp runoob_base_func.cpp
-
-C_SRCS = $(filter %.c, $(SOURCES))
-CPP_SRCS = $(filter %.cpp, $(SOURCES))
-
-C_OBJS = $(C_SRCS:%.c=release/%.o)
-CPP_OBJS = $(CPP_SRCS:%.cpp=release/%.o)
-
-$(C_OBJS):release/%.o:%.c
-	@mkdir -p release
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -shared -fPIC -c $^ -o $@
+$(C_OBJS):%.o:%.c
+	#@mkdir -p release
+	#@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
 	
-$(CPP_OBJS):release/%.o:%.cpp
-	@mkdir -p release
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -shared -fPIC -c $^ -o $@
+$(CPP_OBJS):%.o:%.cpp
+	#@mkdir -p release
+	#@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
 	
 $(TARGET):$(C_OBJS) $(CPP_OBJS)
-	$(CXX) -shared -fPIC -o $@ $^
-	#$(RANLIB) $@
+	$(AR) r $@ $^
+	$(RANLIB) $@
 	mkdir -p $(INSTDIR)/debug
 	cp $@ $(INSTDIR)/debug
 	mkdir -p $(INSTDIR)/release
@@ -54,5 +58,6 @@ clean:
 	-rm -rf release
 	-rm -rf $(INSTDIR)
 	-rm -rf $(TARGET)
+	-rm -rf *.o
 	@echo "clean completed"
 	

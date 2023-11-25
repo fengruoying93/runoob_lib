@@ -3,10 +3,22 @@ TARGET = test
 all:$(TARGET)
 
 CC = gcc
-CXX = g++-4.8
+CXX = g++
+#CXX = g++-4.8
 STRIP = strip
 ARMCC = arm-linux-gcc
 ARMSTRIP = arm-linux-strip
+
+VPATH += ./
+
+SOURCES := $(foreach dir,$(VPATH),$(wildcard $(dir)/*))
+C_SRCS   = $(filter %.c,$(SOURCES))
+CPP_SRCS = $(filter %.cpp,$(SOURCES))
+SRCS = $(C_SRCS) $(CPP_SRCS)
+C_OBJS   = $(C_SRCS:%.c=%.o)
+CPP_OBJS = $(CPP_SRCS:%.cpp=%.o)
+OBJS = $(C_OBJS) $(CPP_OBJS)
+DEPS = $(OBJS:.o=.d)
 
 #where to install
 INSTDIR = bin
@@ -23,14 +35,6 @@ LDFLAGS = -L./runoob_lib
 LDFLAGS += -lrunoob
 
 RANLIB = ranlib
-
-SOURCES = test.c
-
-C_SRCS = $(filter %.c, $(SOURCES))
-CPP_SRCS = $(filter %.cpp, $(SOURCES))
-
-C_OBJS = $(C_SRCS:%.c=%.o)
-CPP_OBJS = $(CPP_SRCS:%.cpp=%.o)
 
 $(C_OBJS):%.o:%.c
 	#@mkdir -p release
